@@ -3,6 +3,7 @@ namespace TheWorld.GameMechanics;
 public record AreaBuilder
 {
     // Default values for every part of an Area, the same trick PlayerBuilder and CreatureBuilder use.
+    private Guid _id;
     private string _name = "The Void";
     private string _description = string.Empty;
     private IReadOnlyList<CreatureReferenceLabel> _creatures = [];
@@ -24,6 +25,7 @@ public record AreaBuilder
     /// </summary>
     public static AreaBuilder FromArea(Area area) => new()
     {
+        _id = area.Id,
         _name = area.Name,
         _description = area.Description,
         _creatures = area.Creatures,
@@ -57,6 +59,14 @@ public record AreaBuilder
         this with { _items = [.. _items, item] };
 
     /// <summary>
+    /// Add a neighboring area by its label 
+    /// </summary>
+    /// <param name="neighbor"></param>
+    /// <returns></returns>
+    public AreaBuilder WithNeighbor(AreaReferenceLabel neighbor) =>
+        this with { _neighbors = [.. _neighbors, neighbor] };
+
+    /// <summary>
     /// Puts the area together from whatever parts have been set, and hands back the Area itself.
     /// Every call builds a brand-new Area, with an identity of its own.
     /// </summary>
@@ -79,6 +89,14 @@ public record AreaBuilder
         if (gameData.TryAdd(area))
             return new() { Id = area.Id, Label = area.Name };
 
+        return null;
+    }
+    
+    public AreaReferenceLabel? Update(GameData gameData)
+    {
+        var area = Build() with { Id = _id };
+        if (gameData.TryUpdate(area))
+            return new() { Id = _id, Label = area.Name };
         return null;
     }
 }
